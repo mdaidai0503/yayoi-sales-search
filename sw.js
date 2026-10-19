@@ -1,1 +1,10 @@
-const CACHE="yayoi-sales-search-v1.1.0-pdf";const ASSETS=["./","./index.html","./app.js","./print.js","./manifest.webmanifest","./icon.svg"];self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})
+const CACHE="yayoi-sales-search-v1.1.1-pdf";
+const ASSETS=["./","./index.html","./app.js?v=1.1.1","./print.js?v=1.1.1","./pdf-start.js?v=1.1.1","./manifest.webmanifest","./icon.svg"];
+self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("yayoi-sales-search-")&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+self.addEventListener("fetch",event=>{
+ if(event.request.method!=="GET")return;
+ const url=new URL(event.request.url);
+ if(url.origin!==self.location.origin)return;
+ event.respondWith(fetch(event.request,{cache:"no-cache"}).catch(()=>caches.match(event.request)));
+});

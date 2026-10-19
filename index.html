@@ -47,9 +47,9 @@ th{position:sticky;top:0;background:#f7f7f7;z-index:1}td.num{text-align:right}
 <label>終了日<input id="to" type="date"></label>
 </div>
 <div class="actions">
-<button id="search" class="primary">検索</button><button id="clear">条件クリア</button><button id="printPdf">PDF印刷（条件に一致する全件）</button>
+<button id="search" class="primary">検索</button><button id="clear">条件クリア</button><button id="printPdf" disabled>PDF印刷（条件に一致する全件）</button>
 </div>
-<p id="printStatus" class="status" role="status" aria-live="polite"></p>
+<p id="printStatus" class="status" role="status" aria-live="polite">PDF印刷 v1.1.1 を読み込み中です。この表示が続く場合は、配信ファイル一式を更新して Ctrl+F5 で再読み込みしてください。</p>
 <p id="status" class="status">検索条件を入力してください。</p>
 </section>
 
@@ -63,6 +63,7 @@ th{position:sticky;top:0;background:#f7f7f7;z-index:1}td.num{text-align:right}
 </section>
 </main>
 </div>
-<script src="./print.js"></script>
-<script src="./app.js"></script>
+<script src="./print.js?v=1.1.1"></script>
+<script src="./app.js?v=1.1.1"></script>
+<script src="./pdf-start.js?v=1.1.1"></script>
 </body></html>

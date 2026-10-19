@@ -39,7 +39,7 @@
   for(const row of rows){quantity=add(quantity,decimal(row.quantity));amount=add(amount,decimal(row.amount));units.add(String(row.unit??""));}
   return {rows,quantity:format(quantity),amount:format(amount),mixedUnits:units.size>1};
  }
- async function render(win,result,filters){
+ async function render(win,result,filters,isCancelled=()=>false){
   const doc=win.document;
   doc.documentElement.lang="ja";doc.title="弥生販売 売上履歴 検索結果";
   doc.head.innerHTML='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
@@ -56,7 +56,7 @@
    @media print{body{background:white}.toolbar{display:none}.sheet{margin:0}}
   `;doc.head.append(style);doc.body.replaceChildren();
   const make=(tag,text,cls)=>{const el=doc.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
-  const toolbar=make("div",undefined,"toolbar"),button=make("button","印刷 / PDF保存");button.disabled=true;button.onclick=()=>win.print();
+  const toolbar=make("div",undefined,"toolbar"),button=make("button","印刷 / PDF保存");button.disabled=true;button.onclick=()=>{win.focus();win.print();};
   toolbar.append(button,make("span","送信先を「PDFに保存」または「Microsoft Print to PDF」、用紙をA4・横、倍率を100%、ヘッダーとフッターをオフにしてください。","hint"));doc.body.append(toolbar);
   const labels=[["customer","得意先名"],["product","商品名"],["productCode","商品コード"],["slipNo","伝票番号"],["from","開始日"],["to","終了日"]];
   const conditions=labels.map(([key,label])=>label+"："+(filters[key]||"指定なし")).join("　／　");
@@ -82,7 +82,7 @@
     newPage();tbody.append(tr);if(overflow())throw new Error("長い明細が1ページに収まりません。対象を絞って再実行してください。");
    }
    if(i%200===199)await new Promise(resolve=>setTimeout(resolve,0));
-   if(win.closed)throw new Error("印刷を中止しました。");
+   if(win.closed||isCancelled())throw new Error("印刷を中止しました。");
   }
   if(!result.rows.length){const tr=make("tr"),td=make("td","該当する売上履歴はありません。");td.colSpan=9;tr.append(td);tbody.append(tr);if(overflow())throw new Error("検索条件が1ページに収まりません。条件を短くして再実行してください。");}
   sheets.forEach((s,i)=>s.querySelector(".footer").textContent=`全${result.rows.length.toLocaleString("ja-JP")}件　／　${i+1} / ${sheets.length} ページ`);

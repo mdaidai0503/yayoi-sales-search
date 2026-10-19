@@ -51,40 +51,4 @@ $("clear").onclick=()=>{["customer","product","productCode","slipNo","from","to"
 $("prev").onclick=()=>{if(page>1){page--;search(false)}};
 $("next").onclick=()=>{if(page*50<total){page++;search(false)}};
 (async()=>{const s=await refreshIfNeeded();showApp(!!s)})();
-if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js");
-
-let printing=false;
-$("printPdf").onclick=async()=>{
- if(printing) return;
- const filters=q();
- if(filters.from && filters.to && filters.from>filters.to){$("printStatus").textContent="開始日は終了日以前にしてください。";return}
- const report=window.open("","_blank");
- if(!report){$("printStatus").textContent="印刷画面を開けません。ポップアップを許可して再度お試しください。";return}
- report.document.title="印刷データ取得中";
- report.document.body.textContent="検索結果を取得しています。この画面を閉じると中止します。";
- report.opener=null;
- printing=true;$("printPdf").disabled=true;
- const controller=new AbortController();
- const closedTimer=setInterval(()=>{if(report.closed)controller.abort()},300);
- try{
-  const result=await YayoiPrint.collect(filters,async query=>{
-   if(report.closed)throw new Error("印刷を中止しました。");
-   const s=await refreshIfNeeded();
-   if(!s)throw new Error("再ログインしてから印刷してください。");
-   const timeout=setTimeout(()=>controller.abort("timeout"),45000);
-   try{
-    const r=await fetch(SUPA+"/functions/v1/yayoi-sales-search",{method:"POST",headers:{"apikey":PUB,"Authorization":"Bearer "+s.access_token,"Content-Type":"application/json"},body:JSON.stringify(query),signal:controller.signal});
-    const d=await r.json();
-    if(!r.ok)throw new Error(d.error||"検索結果を取得できませんでした。");
-    return d;
-   }finally{clearTimeout(timeout);}
-  },(done,count)=>{$("printStatus").textContent=`印刷用データ取得中：${num(done)} / ${num(count)}件`;});
-  if(report.closed)throw new Error("印刷を中止しました。");
-  $("printStatus").textContent="全件取得完了。印刷レイアウトを作成しています…";
-  await YayoiPrint.render(report,result,filters);
-  $("printStatus").textContent=`${num(result.rows.length)}件の印刷画面を開きました。「印刷 / PDF保存」を押してください。`;
- }catch(e){
-  $("printStatus").textContent=controller.signal.reason==="timeout"?"PDF印刷エラー: 通信が時間切れになりました。再実行してください。":e.name==="AbortError"?"印刷を中止しました。":"PDF印刷エラー: "+e.message;
-  if(!report.closed){report.document.body.textContent="印刷データを作成できませんでした。元の検索画面で内容を確認し、再実行してください。";}
- }finally{clearInterval(closedTimer);printing=false;$("printPdf").disabled=false;}
-};
+if("serviceWorker" in navigator) { try { navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}); } catch(e) { /* LAN配信などで未対応でも検索・印刷を初期化します。 */ } }
